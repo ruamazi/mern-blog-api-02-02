@@ -26,7 +26,6 @@ const deleteComment = async (req, res) => {
  const { id } = req.params;
  const userId = req.user.id;
  const userRole = req.user.role;
-
  try {
   const comment = await Comment.findById(id);
   if (!comment) return res.status(404).json({ message: "Comment not found" });

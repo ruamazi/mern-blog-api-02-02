@@ -63,9 +63,8 @@ const updateBlog = async (req, res) => {
  try {
   const blog = await Blog.findById(id);
   if (!blog) return res.status(404).json({ message: "Blog not found" });
-
   // Check if the user is the author
-  if (blog.author.toString() !== userId) {
+  if (req.user.role != "admin" && blog.author.toString() !== userId) {
    return res.status(403).json({ message: "Unauthorized" });
   }
 
