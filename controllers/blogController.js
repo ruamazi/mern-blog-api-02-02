@@ -1,6 +1,8 @@
 const Blog = require("../models/Blog");
 const Comment = require("../models/Comment");
 
+const DEFAULT_LIMIT = 10;
+
 // Create a new blog
 const createBlog = async (req, res) => {
  const { title, content, tags } = req.body;
@@ -18,7 +20,7 @@ const createBlog = async (req, res) => {
 // Get all blogs
 const getAllBlogs = async (req, res) => {
  const page = parseInt(req.query.page) || 1; // Default to page 1
- const limit = parseInt(req.query.limit) || 10; // Default to 10 blogs per page
+ const limit = parseInt(req.query.limit) || DEFAULT_LIMIT; // Default to 10 blogs per page
  try {
   const totalBlogs = await Blog.countDocuments(); // Total number of blogs
   const totalPages = Math.ceil(totalBlogs / limit); // Calculate total pages
@@ -135,6 +137,34 @@ const toggleComments = async (req, res) => {
  }
 };
 
+const getBlogsByTag = async (req, res) => {
+ const page = Math.max(parseInt(req.query.page) || 1, 1); // Default to page 1, but prevent negative pages
+ const limit = Math.min(parseInt(req.query.limit) || DEFAULT_LIMIT, 1000); // Default to 10, max limit 1000
+ const tag = req.query.tag; // Get the tag from the query parameters
+ if (!tag) {
+  return res.status(400).json({ error: "Tag parameter is required" });
+ }
+ try {
+  // Get the total count of blogs with the specified tag
+  const totalBlogs = await Blog.countDocuments({ tags: { $in: [tag] } });
+  // Calculate total pages
+  const totalPages = Math.ceil(totalBlogs / limit);
+  // Fetch the blogs with pagination
+  const blogs = await Blog.find({ tags: { $in: [tag] } })
+   .populate("author", "username profilePicture") // Populate author details
+   .skip((page - 1) * limit) // Skip the number of blogs already displayed
+   .limit(limit); // Limit to the number of blogs per page
+  // Return the response with blogs, current page, and total pages
+  res.json({
+   blogs,
+   currentPage: page,
+   totalPages,
+  });
+ } catch (err) {
+  res.status(500).json({ error: err.message });
+ }
+};
+
 module.exports = {
  createBlog,
  getAllBlogs,
@@ -142,4 +172,5 @@ module.exports = {
  updateBlog,
  deleteBlog,
  toggleComments,
+ getBlogsByTag,
 };

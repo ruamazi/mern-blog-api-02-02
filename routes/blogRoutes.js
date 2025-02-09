@@ -6,6 +6,7 @@ const {
  updateBlog,
  deleteBlog,
  toggleComments,
+ getBlogsByTag,
 } = require("../controllers/blogController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -13,6 +14,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getAllBlogs);
+router.get("/tag", getBlogsByTag);
 router.get("/:id", getBlogById);
 
 // Protected routes (require authentication)
